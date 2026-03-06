@@ -45,18 +45,36 @@ This project implements an end-to-end sales forecasting system that:
 ## 📁 Project Structure
 
 ```
-ML/
-├── data/                          # Historical sales dataset
-├── notebooks/                     # Jupyter notebook with analysis
-├── models/                        # Saved trained model
-├── output/                        # Results and visualizations
-├── static/                        # Frontend assets (CSS/JS)
-├── templates/                     # HTML templates for Web Dashboard
-├── app.py                          # Flask Web Dashboard & API
-├── sales_forecasting_analysis.py   # Main analysis script
-├── create_dataset.py               # Dataset generation script
-├── requirements.txt                # Python dependencies
-└── README.md                       # This file
+FUTURE_ML_01/
+│
+├── 🐍 app.py                          # Flask backend & Automated Hub API
+├── 🐍 sales_forecasting_analysis.py   # Main ML pipeline script
+├── 🐍 create_dataset.py               # Synthetic dataset generator
+│
+├── 🖥️  DASHBOARD.html                 # Main Automated Hub (Emerald UI)
+├── 📊 SYSTEM_OVERVIEW.html            # Stakeholder overview page
+│
+├── 📁 data/
+│   └── sales_data.csv                 # Historical sales dataset (input)
+│
+├── 📁 models/                         # Trained ML models (.pkl) — auto-generated
+│
+├── 📁 static/
+│   ├── css/                           # Dashboard stylesheets
+│   └── js/                            # Automated update logic
+│
+├── 📁 templates/                      # Flask HTML templates
+│
+├── 📁 notebooks/
+│   └── sales_forecasting.ipynb        # Interactive Jupyter notebook
+│
+├── 📄 README.md                       # This file
+├── 📄 INDEX.md                        # Navigation hub
+├── 📄 QUICK_START.md                  # 5-minute setup guide
+├── 📄 PROJECT_DELIVERABLES.md         # Full project inventory
+├── 📄 requirements.txt                # Python dependencies
+├── 📄 LICENSE                         # MIT License
+└── 📄 .gitignore                      # Git exclusion rules
 ```
 
 ## 🌐 Web Dashboard & Automated Update Hub
