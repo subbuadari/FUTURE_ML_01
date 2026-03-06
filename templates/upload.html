@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Forecast Auto-Update</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>📊 Sales Forecasting Auto-Update</h1>
+                <p class="subtitle">Upload new sales data to automatically generate updated forecasts</p>
+            </div>
+        </header>
+
+        <!-- Status Card -->
+        <div class="status-card" id="statusCard">
+            <div class="status-item">
+                <span class="status-label">System Status:</span>
+                <span class="status-value">✅ Operational</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Records:</span>
+                <span class="status-value" id="recordCount">Loading...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last Updated:</span>
+                <span class="status-value" id="lastUpdate">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <h2>📤 Upload New Sales Data</h2>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p class="upload-text">Drag CSV file here or click to select</p>
+                    <p class="upload-subtext">Supported: CSV files up to 5MB</p>
+                    <input type="file" id="fileInput" accept=".csv" hidden>
+                </div>
+
+                <div class="file-info" id="fileInfo" style="display:none;">
+                    <div class="file-name-display">
+                        <span id="fileName">Filename</span>
+                        <button class="btn-remove" onclick="resetUpload()">Remove</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="processBtn" style="display:none;" onclick="processFile()">
+                    ⚙️ Process & Generate Forecast
+                </button>
+            </section>
+
+            <!-- Processing Section -->
+            <section class="processing-section" id="processingSection" style="display:none;">
+                <h2>⚙️ Processing...</h2>
+
+                <div class="progress-steps">
+                    <div class="step" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <div class="step-title">Validating File</div>
+                            <div class="step-status">pending</div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">→</div>
+
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <div class="step-title">Appending Data</div>
+                            <div class="step-status">pending</div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">→</div>
+
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <div class="step-title">Training Models</div>
+                            <div class="step-status">pending</div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">→</div>
+
+                    <div class="step" id="step4">
+                        <div class="step-number">4</div>
+                        <div class="step-info">
+                            <div class="step-title">Generating Forecast</div>
+                            <div class="step-status">pending</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display:none;">
+                <h2>✅ Processing Complete!</h2>
+
+                <div class="results-grid">
+                    <!-- Data Statistics -->
+                    <div class="result-card">
+                        <h3>📊 Data Statistics</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">New Records Added:</span>
+                            <span class="stat-value" id="newRecords">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Records Now:</span>
+                            <span class="stat-value" id="totalRecords">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Data Growth:</span>
+                            <span class="stat-value stat-increase" id="dataGrowth">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Model Performance -->
+                    <div class="result-card">
+                        <h3>🤖 Model Performance</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">Selected Model:</span>
+                            <span class="stat-value" id="modelName">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">R² Score (Accuracy):</span>
+                            <span class="stat-value stat-r2" id="r2Score">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Mean Absolute Error:</span>
+                            <span class="stat-value" id="maeScore">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Forecast Overview -->
+                    <div class="result-card">
+                        <h3>📈 30-Day Forecast</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">Average Daily Sales:</span>
+                            <span class="stat-value" id="avgDaily">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total 30-Day Revenue:</span>
+                            <span class="stat-value stat-revenue" id="total30Day">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Peak Sales Day:</span>
+                            <span class="stat-value stat-peak" id="peakSales">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Comparison -->
+                    <div class="result-card">
+                        <h3>📊 Forecast Comparison</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">Historical Average:</span>
+                            <span class="stat-value" id="historyAvg">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">New Forecast Average:</span>
+                            <span class="stat-value" id="forecastAvg">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Change:</span>
+                            <span class="stat-value stat-change" id="changePercent">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Models Comparison -->
+                <div class="models-comparison">
+                    <h3>All Models Comparison</h3>
+                    <div class="model-table">
+                        <div class="table-header">
+                            <div>Model</div>
+                            <div>R² Score</div>
+                            <div>MAE</div>
+                            <div>RMSE</div>
+                        </div>
+                        <div id="modelsTableBody"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="downloadForecast()">
+                        📥 Download Forecast CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetUpload()">
+                        📁 Upload Another File
+                    </button>
+                </div>
+
+                <!-- Success Message -->
+                <div class="success-message">
+                    <strong>✅ Success!</strong> Your forecast has been updated with the latest data.
+                    Download the CSV file to view detailed daily predictions.
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display:none;">
+                <h2>❌ Error Processing File</h2>
+                <div class="error-message" id="errorMessage"></div>
+                <button class="btn btn-secondary" onclick="resetUpload()">
+                    Try Again
+                </button>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p><strong>Sales Forecasting Auto-Update System</strong></p>
+            <p>Automatically update your forecasts with just one CSV upload</p>
+            <p style="margin-top: 15px; color: #999; font-size: 0.9em;">
+                ✅ Auto data appending | ✅ Auto model retraining | ✅ Auto forecast generation
+            </p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+</body>
+</html>

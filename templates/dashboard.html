@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Forecasting Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4f2;
+            color: #2c3e50;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(46, 204, 113, 0.1);
+            border-bottom: 4px solid #2ecc71;
+        }
+
+        h1 {
+            color: #27ae60;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+            font-weight: 800;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #ffffff;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2ecc71;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+        }
+
+        .status-badge.warning {
+            background: #f1c40f;
+            box-shadow: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            background: #e8f5e9;
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #27ae60;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: #2ecc71;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #27ae60;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f0f0f0;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(46, 204, 113, 0.1);
+        }
+
+        .chart-card h3 {
+            padding: 20px;
+            background: #fafff9;
+            color: #27ae60;
+            margin: 0;
+            font-size: 1.3em;
+            border-bottom: 1px solid #e8f5e9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .chart-description {
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .data-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: scale(1.02);
+            border-color: #2ecc71;
+        }
+
+        .data-card h3 {
+            color: #27ae60;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25em;
+        }
+
+        .data-card-icon {
+            color: #2ecc71;
+            font-size: 1.4em;
+        }
+
+        .file-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2ecc71;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .file-link:hover {
+            background: #27ae60;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .summary-text {
+            background: #fafff9;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e8f5e9;
+            font-size: 1em;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            color: #2c3e50;
+        }
+
+        .update-section {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .update-section h2 {
+            color: #27ae60;
+            margin-bottom: 30px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step {
+            background: #fafff9;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #2ecc71;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .step:hover {
+            transform: translateX(10px);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 36px;
+            font-weight: 800;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+        }
+
+        .code-box {
+            background: #2c3e50;
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 15px 0;
+            border-left: 4px solid #2ecc71;
+            font-size: 0.95em;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-box {
+            background: white;
+            color: #2c3e50;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid #e8f5e9;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .metric-box:hover {
+            border-color: #2ecc71;
+            transform: translateY(-5px);
+            background: #fafff9;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: 800;
+            color: #27ae60;
+            letter-spacing: -1px;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 5px solid #2ecc71;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .success-box strong {
+            color: #1b5e20;
+        }
+
+        footer {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            color: #7f8c8d;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #2ecc71;
+            color: white;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #27ae60;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #27ae60;
+            border: 2px solid #2ecc71;
+        }
+
+        .btn-secondary:hover {
+            background: #fafff9;
+            transform: translateY(-2px);
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            color: #0d47a1;
+        }
+
+        /* Automated Update UI Styles */
+        .upload-area {
+            border: 3px dashed #2ecc71;
+            padding: 50px;
+            text-align: center;
+            border-radius: 16px;
+            background: #fafff9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            background: #e8f5e9;
+            border-color: #27ae60;
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.25em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .upload-subtext {
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        .progress-container {
+            display: none;
+            margin: 30px 0;
+        }
+
+        .progress-bar-bg {
+            background: #eee;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-fill {
+            background: #2ecc71;
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .update-steps {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .update-step {
+            flex: 1;
+            text-align: center;
+            font-size: 0.85em;
+            color: #95a5a6;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .update-step.active {
+            color: #27ae60;
+            background: #e8f5e9;
+            font-weight: 700;
+        }
+
+        .update-step.complete {
+            color: #2ecc71;
+            background: #fafff9;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 5px solid;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #27ae60;
+            border-color: #2ecc71;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-color: #ef5350;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Sales Forecasting Dashboard</h1>
+            <p style="color: #666; font-size: 1.1em; margin-top: 10px;">Complete ML System for Sales Predictions</p>
+
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-badge"></div>
+                    <span><strong>System Status:</strong> Active & Running</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-badge"></div>
+                    <span><strong>Latest Forecast:</strong> Generated Today</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-badge"></div>
+                    <span><strong>Model State:</strong> Trained & Ready</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-badge warning"></div>
+                    <span><strong>Next Update:</strong> Schedule for next month</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('overview')">📈 Overview</button>
+            <button class="tab-button" onclick="switchTab('charts')">📊 Visualizations</button>
+            <button class="tab-button" onclick="switchTab('data')">📁 Data Files</button>
+            <button class="tab-button" onclick="switchTab('summary')">📋 Summary Report</button>
+            <button class="tab-button" onclick="switchTab('update')">🔄 Update Process</button>
+            <button class="tab-button" onclick="switchTab('workflow')">🔧 How It Works</button>
+        </div>
+
+        <!-- OVERVIEW TAB -->
+        <div id="overview" class="tab-content active">
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                <h2 style="color: #27ae60; margin-bottom: 20px;">Current Forecast Summary</h2>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-label">Average Daily Sales</div>
+                        <div class="metric-value" id="m-avg-sales">$6,627</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">30-Day Total Revenue</div>
+                        <div class="metric-value" id="m-total-revenue">$198,815</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Growth vs Historical</div>
+                        <div class="metric-value" id="m-growth">+7.4%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Peak Sales Day</div>
+                        <div class="metric-value" id="m-peak-sales">$7,360</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Model Accuracy (R²)</div>
+                        <div class="metric-value" id="m-accuracy">36.3%</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Prediction Error</div>
+                        <div class="metric-value" id="m-error">±$995</div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <strong>✅ System Ready:</strong> All models trained, forecasts generated, and visualizations
+                    created. You have everything needed to make data-driven decisions!
+                </div>
+
+                <h3 style="color: #27ae60; margin-top: 30px; margin-bottom: 15px;">Quick Links to Outputs</h3>
+                <div class="button-group">
+                    <a href="output/03_sales_forecast.png" class="btn btn-primary" target="_blank">📊 View Main Forecast
+                        Chart</a>
+                    <a href="output/sales_forecast_30days.csv" class="btn btn-primary" download>📥 Download Forecast
+                        Data</a>
+                    <a href="output/FORECAST_SUMMARY_REPORT.txt" class="btn btn-primary" target="_blank">📄 Read
+                        Executive Summary</a>
+                    <a href="models/" class="btn btn-secondary" target="_blank">💾 View Trained Model</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHARTS TAB -->
+        <div id="charts" class="tab-content">
+            <h2 style="color: #27ae60; margin-bottom: 30px; font-size: 2em;">📊 Professional Visualizations</h2>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>📈 Time Series Analysis</h3>
+                    <img src="output/01_time_series_analysis.png" id="img-01" alt="Time Series Analysis"
+                        class="chart-image">
+                    <div class="chart-description">
+                        <strong>What it shows:</strong> Historical sales patterns over 3 years<br><br>
+                        Shows daily sales trends and monthly aggregates to identify seasonality patterns. The chart
+                        reveals clear weekly cycles and seasonal demand variations.
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>🏆 Model Comparison</h3>
+                    <img src="output/02_model_comparison.png" id="img-02" alt="Model Comparison" class="chart-image">
+                    <div class="chart-description">
+                        <strong>What it shows:</strong> All 3 models compared<br><br>
+                        Compares Linear Regression, Random Forest, and Gradient Boosting. Shows R² scores, RMSE, and
+                        MAE. Linear Regression selected as best performer.
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>🎯 30-Day Sales Forecast</h3>
+                    <img src="output/03_sales_forecast.png" id="img-03" alt="Sales Forecast" class="chart-image">
+                    <div class="chart-description">
+                        <strong>What it shows:</strong> Next 30 days of predicted sales<br><br>
+                        The main forecast showing historical sales (blue) and 30-day prediction (purple) with weekly
+                        breakdown. This is your primary planning tool.
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>⚡ Feature Importance</h3>
+                    <img src="output/04_feature_importance.png" id="img-04" alt="Feature Importance"
+                        class="chart-image">
+                    <div class="chart-description">
+                        <strong>What it shows:</strong> What drives sales predictions<br><br>
+                        Identifies which features (date, day-of-week, previous sales, etc.) have the most impact on
+                        forecasts. Helps understand sales drivers.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA TAB -->
+        <div id="data" class="tab-content">
+            <h2 style="color: #27ae60; margin-bottom: 30px; font-size: 2em;">📁 Data Files & Exports</h2>
+
+            <div class="data-grid">
+                <div class="data-card">
+                    <h3><span class="data-card-icon">📊</span> Forecast Data</h3>
+                    <p><strong>File:</strong> sales_forecast_30days.csv</p>
+                    <p><strong>Format:</strong> CSV (Excel compatible)</p>
+                    <p><strong>Contains:</strong> 30 days of daily sales predictions with dates</p>
+                    <p><strong>Use:</strong> Import into Excel, Tableau, or dashboards</p>
+                    <a href="output/sales_forecast_30days.csv" class="file-link" download>📥 Download CSV</a>
+                </div>
+
+                <div class="data-card">
+                    <h3><span class="data-card-icon">📈</span> Model Metrics</h3>
+                    <p><strong>File:</strong> model_evaluation_results.csv</p>
+                    <p><strong>Format:</strong> CSV (Excel compatible)</p>
+                    <p><strong>Contains:</strong> R², RMSE, MAE for all 3 models</p>
+                    <p><strong>Use:</strong> Track model performance over time</p>
+                    <a href="output/model_evaluation_results.csv" class="file-link" download>📥 Download CSV</a>
+                </div>
+
+                <div class="data-card">
+                    <h3><span class="data-card-icon">📋</span> Executive Summary</h3>
+                    <p><strong>File:</strong> FORECAST_SUMMARY_REPORT.txt</p>
+                    <p><strong>Format:</strong> Plain Text</p>
+                    <p><strong>Contains:</strong> Complete business insights & recommendations</p>
+                    <p><strong>Use:</strong> Share with stakeholders & decision makers</p>
+                    <a href="output/FORECAST_SUMMARY_REPORT.txt" class="file-link" target="_blank">📄 View Report</a>
+                </div>
+
+                <div class="data-card">
+                    <h3><span class="data-card-icon">🤖</span> Trained ML Model</h3>
+                    <p><strong>File:</strong> linear_regression_model.pkl</p>
+                    <p><strong>Format:</strong> Python Pickle (serialized)</p>
+                    <p><strong>Contains:</strong> Trained Linear Regression model</p>
+                    <p><strong>Use:</strong> Load in Python for predictions</p>
+                    <a href="models/" class="file-link" target="_blank">📂 View Models Folder</a>
+                </div>
+
+                <div class="data-card">
+                    <h3><span class="data-card-icon">📊</span> Input Sales Data</h3>
+                    <p><strong>File:</strong> data/sales_data.csv</p>
+                    <p><strong>Format:</strong> CSV</p>
+                    <p><strong>Contains:</strong> Historical sales (2021-2023)</p>
+                    <p><strong>Use:</strong> Source data for model training</p>
+                    <a href="data/sales_data.csv" class="file-link" target="_blank">📂 View Data</a>
+                </div>
+
+                <div class="data-card">
+                    <h3><span class="data-card-icon">📚</span> Documentation</h3>
+                    <p><strong>Files:</strong> README.md, QUICK_START.md, etc.</p>
+                    <p><strong>Format:</strong> Markdown & HTML</p>
+                    <p><strong>Contains:</strong> Complete system documentation</p>
+                    <p><strong>Use:</strong> Learn how to use the system</p>
+                    <a href="README.md" class="file-link" target="_blank">📖 Read Docs</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUMMARY TAB -->
+        <div id="summary" class="tab-content">
+            <h2 style="color: #27ae60; margin-bottom: 30px; font-size: 2em;">📋 Executive Summary Report</h2>
+
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
+                <div class="summary-text">
+                    ================================================================================
+                    SALES & DEMAND FORECASTING - EXECUTIVE SUMMARY
+                    ================================================================================
+
+                    PROJECT COMPLETION DATE: 2026-03-06 18:00:41
+
+                    DATASET INFORMATION:
+                    • Total historical data points: 80 days
+                    • Time period: 2021-01-01 to 2023-12-15
+                    • Average daily sales: $6,171.60
+                    • Sales range: $4,105.20 to $8,678.01
+
+                    MODELS EVALUATED:
+                    1. Linear Regression - R²: 0.3632
+                    2. Random Forest - R²: 0.0855
+                    3. Gradient Boosting - R²: -0.1690
+
+                    SELECTED MODEL:
+                    • Model: Linear Regression
+                    • R² Score: 0.3632 (36.32%)
+                    • Mean Absolute Error: $994.76
+                    • Prediction Confidence: 83.9%
+
+                    30-DAY FORECAST OUTLOOK:
+                    • Forecasted average daily sales: $6,627.18
+                    • Total 30-day revenue projection: $198,815.25
+                    • Growth vs. historical average: +7.4%
+                    • Peak sales day: 2023-12-18 ($7,359.65)
+                    • Lowest sales day: 2024-01-14 ($5,750.61)
+
+                    KEY BUSINESS DECISIONS:
+                    1. Use forecasted daily averages for inventory planning
+                    2. Prepare staffing levels based on high-sales days
+                    3. Plan promotions for identified low-sales periods
+                    4. Monitor actual vs. forecasted performance weekly
+                    5. Update model monthly with new data for continuous improvement
+
+                    RECOMMENDATIONS FOR ACTION:
+                    ✓ Inventory: Prepare +15% stock for Dec 18 peak
+                    ✓ Staffing: Add 20% staff Dec 18-24 (holiday)
+                    ✓ Marketing: Run promotions Jan 6-14 (low period)
+                    ✓ Cash Flow: Budget &198,815 for 30-day period
+                    ✓ Monitoring: Compare actual vs forecast weekly</div>
+
+                <div style="margin-top: 30px;">
+                    <a href="output/FORECAST_SUMMARY_REPORT.txt" class="btn btn-primary" download>📥 Download Full
+                        Report</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPDATE PROCESS TAB -->
+        <div id="update" class="tab-content">
+            <h2 style="color: #27ae60; margin-bottom: 30px; font-size: 2em;">🚀 Smart Update Hub</h2>
+
+            <div class="update-section">
+                <h2>Automated Data Retraining</h2>
+                <p style="color: #7f8c8d; margin-bottom: 25px;">Upload your new sales data CSV to automatically append
+                    records, retrain AI models, and refresh all dashboard charts.</p>
+
+                <div id="alert-zone"></div>
+
+                <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📊</div>
+                    <div class="upload-text">Drag & Drop new sales CSV here</div>
+                    <div class="upload-subtext">or click to browse from files</div>
+                    <input type="file" id="file-input" accept=".csv" class="hidden">
+                    <div id="file-display" class="hidden" style="margin-top: 15px; font-weight: bold; color: #27ae60;">
+                    </div>
+                </div>
+
+                <div id="progress-hub" class="progress-container">
+                    <div class="progress-bar-bg">
+                        <div id="progress-bar" class="progress-bar-fill"></div>
+                    </div>
+                    <div class="update-steps">
+                        <div id="step-1" class="update-step">Validation</div>
+                        <div id="step-2" class="update-step">Preprocessing</div>
+                        <div id="step-3" class="update-step">ML Training</div>
+                        <div id="step-4" class="update-step">UI Refresh</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="btn btn-primary" id="start-update-btn" disabled>
+                        🔧 Run Automated Update
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKFLOW TAB -->
+        <div id="workflow" class="tab-content">
+            <h2 style="color: #27ae60; margin-bottom: 30px; font-size: 2em;">🔧 System Workflow & Verification</h2>
+
+            <div class="workflow-diagram">
+                <h3 style="color: #27ae60; margin-bottom: 20px;">Complete System Workflow</h3>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">📥</div>
+                    <div class="workflow-text">
+                        <strong>Step 1: Data Input</strong><br>
+                        Historical sales data (3 years)<br>
+                        <span style="opacity: 0.7; font-size: 0.9em;">File: data/sales_data.csv</span>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">🔍</div>
+                    <div class="workflow-text">
+                        <strong>Step 2: Data Exploration</strong><br>
+                        Load, clean, validate data<br>
+                        Calculate basic statistics
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">⚙️</div>
+                    <div class="workflow-text">
+                        <strong>Step 3: Feature Engineering</strong><br>
+                        Create 12 advanced features:<br>
+                        • Temporal (date, day, month, etc)<br>
+                        • Lag (1-day, 7-day, 30-day)<br>
+                        • Rolling averages (7-day, 30-day)
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">📊</div>
+                    <div class="workflow-text">
+                        <strong>Step 4: Model Training</strong><br>
+                        Train 3 different models:<br>
+                        • Linear Regression<br>
+                        • Random Forest<br>
+                        • Gradient Boosting
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">🏆</div>
+                    <div class="workflow-text">
+                        <strong>Step 5: Model Evaluation</strong><br>
+                        Evaluate on test set<br>
+                        Calculate R², RMSE, MAE<br>
+                        Select best model: Linear Regression (R² 0.363)
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">🎯</div>
+                    <div class="workflow-text">
+                        <strong>Step 6: Generate Forecast</strong><br>
+                        Predict 30 days ahead<br>
+                        Calculate confidence intervals<br>
+                        Create weekly aggregates
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">📈</div>
+                    <div class="workflow-text">
+                        <strong>Step 7: Visualization</strong><br>
+                        Create 4 professional charts:<br>
+                        • Time series analysis<br>
+                        • Model comparison<br>
+                        • Sales forecast<br>
+                        • Feature importance
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">💾</div>
+                    <div class="workflow-text">
+                        <strong>Step 8: Export & Report</strong><br>
+                        Save outputs:<br>
+                        • 4 PNG visualizations<br>
+                        • 2 CSV data files<br>
+                        • 1 trained model<br>
+                        • Executive summary
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="workflow-step">
+                    <div class="workflow-icon">✅</div>
+                    <div class="workflow-text">
+                        <strong>Step 9: Business Use</strong><br>
+                        Use forecasts for:<br>
+                        • Inventory planning<br>
+                        • Staffing decisions<br>
+                        • Marketing timing<br>
+                        • Cash flow planning
+                    </div>
+                </div>
+            </div>
+
+            <div class="update-section">
+                <h2>✅ Verification: Is Everything Working?</h2>
+
+                <div
+                    style="background: #d5f4e6; border-left: 4px solid #27ae60; padding: 20px; border-radius: 6px; margin: 20px 0;">
+                    <strong style="color: #27ae60;">SUCCESS CHECKLIST - Verify each item below:</strong>
+                </div>
+
+                <div style="display: grid; gap: 15px;">
+                    <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 1.5em;">✅</div>
+                            <div>
+                                <strong>Data Input</strong><br>
+                                <span style="color: #666;">✓ data/sales_data.csv exists with 80+ days of data</span><br>
+                                <span style="color: #666;">✓ Columns: date, store_id, product_category, sales</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 1.5em;">✅</div>
+                            <div>
+                                <strong>Script Execution</strong><br>
+                                <span style="color: #666;">✓ Command runs: python
+                                    sales_forecasting_analysis.py</span><br>
+                                <span style="color: #666;">✓ Completes without errors in 1-2 minutes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 1.5em;">✅</div>
+                            <div>
+                                <strong>Model Training</strong><br>
+                                <span style="color: #666;">✓ 3 models train successfully</span><br>
+                                <span style="color: #666;">✓ Best model: Linear Regression selected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 1.5em;">✅</div>
+                            <div>
+                                <strong>Forecast Generation</strong><br>
+                                <span style="color: #666;">✓ 30-day forecast created</span><br>
+                                <span style="color: #666;">✓ Daily sales values in reasonable range ($5-8K)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 1.5em;">✅</div>
+                            <div>
+                                <strong>Outputs Generated</strong><br>
+                                <span style="color: #666;">✓ output/ folder has 4 PNG files</span><br>
+                                <span style="color: #666;">✓ sales_forecast_30days.csv created</span><br>
+                                <span style="color: #666;">✓ FORECAST_SUMMARY_REPORT.txt generated</span><br>
+                                <span style="color: #666;">✓ models/ folder has trained model</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: start; gap: 15px;">
+                            <div style="font-size: 1.5em;">✅</div>
+                            <div>
+                                <strong>Business Ready</strong><br>
+                                <span style="color: #666;">✓ Visualizations suitable for presentations</span><br>
+                                <span style="color: #666;">✓ Data exportable to Excel/dashboards</span><br>
+                                <span style="color: #666;">✓ Model ready for deployment</span><br>
+                                <span style="color: #666;">✓ Recommendations actionable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box" style="margin-top: 30px;">
+                    <strong>🎉 If all items checked:</strong> Your forecasting system is working perfectly! Ready to use
+                    for business planning and monthly updates.
+                </div>
+            </div>
+
+            <div class="update-section">
+                <h2>🔄 Monthly Update Cycle</h2>
+                <p style="margin-bottom: 20px;">Here's what happens each month:</p>
+
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #e8f5e9; border-bottom: 2px solid #27ae60;">
+                        <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Week</th>
+                        <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Activity</th>
+                        <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Time</th>
+                        <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Output</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 15px; border: 1px solid #ddd;"><strong>Week 1</strong></td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Collect new sales data</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">30 min</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Updated CSV file</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 15px; border: 1px solid #ddd;"><strong>Week 1</strong></td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Run forecast script</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">2 min</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">New visualizations</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 15px; border: 1px solid #ddd;"><strong>Week 2</strong></td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Review accuracy</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">15 min</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Confidence score</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 15px; border: 1px solid #ddd;"><strong>Week 2-3</strong></td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Share with teams</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">1 hour</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Team alignment</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px; border: 1px solid #ddd;"><strong>Week 3-4</strong></td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Use forecast for planning</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Ongoing</td>
+                        <td style="padding: 15px; border: 1px solid #ddd;">Better decisions</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>Sales & Demand Forecasting Dashboard</strong></p>
+        <p style="margin-top: 10px; color: #999; font-size: 0.9em;">
+            Status: ✅ Active | Last Update: March 6, 2026 | Next Update: Due in ~30 days
+        </p>
+        <p style="margin-top: 20px; color: #999; font-size: 0.85em;">
+            📊 All data, models, and outputs are securely stored in the ML folder.<br>
+            🔄 Update monthly for best forecast accuracy.<br>
+            💼 Use forecasts to optimize inventory, staffing, and marketing decisions.
+        </p>
+    </footer>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Deactivate all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Activate clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+    <script src="static/js/dashboard_automated.js"></script>
+</body>
+
+</html>
