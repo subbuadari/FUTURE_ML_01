@@ -10,7 +10,11 @@ __pycache__/
 
 # Large generated files
 models/*.pkl
-output/archive/
+
+# Generated output (recreated on every run)
+output/
+
+# Temporary upload files
 uploads/
 
 # IDE settings
