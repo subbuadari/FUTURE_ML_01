@@ -125,9 +125,9 @@ function refreshUI(data) {
         document.getElementById('m-error').textContent = `±$${data.model_performance.mae.toLocaleString()}`;
     }
 
-    // 2. Refresh Chart Images (Add timestamp to bypass cache)
+    // 2. Refresh Chart Images (Including split comparison plots)
     const t = new Date().getTime();
-    ['img-01', 'img-02', 'img-03', 'img-04'].forEach(id => {
+    ['img-01', 'img-02a', 'img-02b', 'img-02c', 'img-02d', 'img-03', 'img-04'].forEach(id => {
         const img = document.getElementById(id);
         if (img) {
             const baseSrc = img.src.split('?')[0];
@@ -135,9 +135,30 @@ function refreshUI(data) {
         }
     });
 
-    // 3. Update Model Download Links
-    const modelName = data.model_performance.model_selected;
-    const modelFile = `${modelName.toLowerCase().replace(/ /g, '_')}_model.pkl`;
+    // 3. Update Performance Table Dynamically
+    const bestModel = data.model_performance.model_selected;
+    const allModels = data.model_performance.all_models;
+    const tableBody = document.getElementById('performance-table-body');
+    
+    if (tableBody && allModels) {
+        let tableHtml = '';
+        Object.entries(allModels).forEach(([name, metrics]) => {
+            const isBest = name === bestModel;
+            tableHtml += `
+                <tr>
+                    <td class="model-name-cell">${name}</td>
+                    <td><span class="badge badge-metric">${(metrics.r2 * 100).toFixed(1)}%</span></td>
+                    <td><span class="badge badge-metric">$${metrics.rmse.toLocaleString()}</span></td>
+                    <td><span class="badge badge-metric">$${metrics.mae.toLocaleString()}</span></td>
+                    <td><span class="badge ${isBest ? 'badge-winner' : 'badge-metric'}">${isBest ? 'Selected Best' : 'Candidate'}</span></td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = tableHtml;
+    }
+
+    // 4. Update Model Download Links
+    const modelFile = `${bestModel.toLowerCase().replace(/ /g, '_')}_model.pkl`;
     const modelPath = `models/${modelFile}`;
 
     if (document.getElementById('link-model-btn')) {
@@ -147,7 +168,7 @@ function refreshUI(data) {
         document.getElementById('link-model-file').href = modelPath;
     }
 
-    // 4. Scroll to overview to show results
+    // 5. Scroll to overview to show results
     setTimeout(() => {
         switchTab('overview');
         window.scrollTo({ top: 0, behavior: 'smooth' });

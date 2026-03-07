@@ -4,7 +4,13 @@ Sales & Demand Forecasting System
 Complete implementation of a business forecasting solution
 """
 
+import sys
 import os
+import io
+# Ensure UTF-8 output even on Windows terminals/redirection
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -70,16 +76,18 @@ monthly_sales['year_month'] = monthly_sales['date'].dt.to_period('M')
 monthly_agg = monthly_sales.groupby('year_month')['sales'].sum().reset_index()
 monthly_agg['year_month'] = monthly_agg['year_month'].astype(str)
 
-axes[1].bar(range(len(monthly_agg)), monthly_agg['sales'], color='#A23B72', alpha=0.8)
-axes[1].set_title('Monthly Total Sales - Identifying Seasonality', fontsize=14, fontweight='bold')
-axes[1].set_xlabel('Month')
-axes[1].set_ylabel('Sales ($)')
-axes[1].set_xticks(range(0, len(monthly_agg), 3))
-axes[1].set_xticklabels(monthly_agg['year_month'][::3], rotation=45)
+# Reduce tick frequency if too many months (show every 6 months for 3 years)
+tick_freq = max(1, len(monthly_agg) // 6)
+axes[1].bar(range(len(monthly_agg)), monthly_agg['sales'], color='#A23B72', alpha=0.8, width=0.7)
+axes[1].set_title('Monthly Total Sales - Identifying Seasonality', fontsize=14, fontweight='bold', pad=15)
+axes[1].set_xlabel('Month', fontsize=11, labelpad=10)
+axes[1].set_ylabel('Sales ($)', fontsize=11, labelpad=10)
+axes[1].set_xticks(range(0, len(monthly_agg), tick_freq))
+axes[1].set_xticklabels(monthly_agg['year_month'][::tick_freq], rotation=45)
 axes[1].grid(True, alpha=0.3, axis='y')
 
-plt.tight_layout()
-plt.savefig('output/01_time_series_analysis.png', dpi=300, bbox_inches='tight')
+plt.subplots_adjust(hspace=0.25) # Moderated vertical spacing
+plt.savefig('output/01_time_series_analysis.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
 plt.close()
 print("✓ Time-series visualization saved")
 
@@ -252,63 +260,80 @@ SECONDARY_EMERALD = '#059669'
 ACCENT_TEAL = '#0d9488'
 LINE_COLORS = [PRIMARY_GREEN, ACCENT_TEAL, '#3b82f6']
 
-# Model comparison visualization
-fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-fig.patch.set_facecolor('#ffffff')
+# ============================================================================
+# 7. MODEL COMPARISON VISUALIZATIONS (SPLIT)
+# ============================================================================
+print("\n[7/8] Generating model comparison visualizations...")
 
-# Plot 1: All models comparison on test set
-ax = axes[0, 0]
-test_dates = test_data['date'].values
-test_actual = y_test.values
+# Shared plot styling
+plt.rcParams['figure.facecolor'] = 'white'
+plt.rcParams['axes.facecolor'] = 'white'
 
-ax.plot(test_dates, test_actual, '-', color='#1e293b', linewidth=3, label='Actual Sales', zorder=3)
+# 02a: Actual vs Predicted Sales (Test Set)
+plt.figure(figsize=(12, 6)) # Reverted height
+plt.plot(test_data['date'], y_test.values, '-', color='#1e293b', linewidth=3, label='Actual Sales', zorder=3)
 for (model_name, model_results), color in zip(results.items(), LINE_COLORS):
-    ax.plot(test_dates, model_results['test_pred'], '--', linewidth=2,
-            label=model_name, color=color, alpha=0.9)
-ax.set_title('Test Set: Actual vs Predicted Sales', fontsize=12, fontweight='bold')
-ax.set_xlabel('Date')
-ax.set_ylabel('Sales ($)')
-ax.legend()
-ax.grid(True, alpha=0.3)
-
-# Plot 2: R² Score comparison
-ax = axes[0, 1]
-bars = ax.bar(eval_df['Model'], eval_df['Test R²'], color=LINE_COLORS, alpha=0.9)
-ax.set_title('R² Score Comparison (Test Set)', fontsize=12, fontweight='bold')
-ax.set_ylabel('R² Score')
-ax.set_ylim([0, 1.1])
-for bar in bars:
-    height = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2., height, f'{height:.3f}',
-            ha='center', va='bottom', fontsize=10)
-ax.grid(True, alpha=0.3, axis='y')
-
-# Plot 3: RMSE comparison
-ax = axes[1, 0]
-bars = ax.bar(eval_df['Model'], eval_df['Test RMSE'], color=LINE_COLORS, alpha=0.9)
-ax.set_title('Root Mean Squared Error (Test Set)', fontsize=12, fontweight='bold')
-ax.set_ylabel('RMSE ($)')
-for bar in bars:
-    height = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2., height, f'{height:.0f}',
-            ha='center', va='bottom', fontsize=10)
-ax.grid(True, alpha=0.3, axis='y')
-
-# Plot 4: MAE comparison
-ax = axes[1, 1]
-bars = ax.bar(eval_df['Model'], eval_df['Test MAE'], color=LINE_COLORS, alpha=0.9)
-ax.set_title('Mean Absolute Error (Test Set)', fontsize=12, fontweight='bold')
-ax.set_ylabel('MAE ($)')
-for bar in bars:
-    height = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2., height, f'{height:.0f}',
-            ha='center', va='bottom', fontsize=10)
-ax.grid(True, alpha=0.3, axis='y')
-
-plt.tight_layout()
-plt.savefig('output/02_model_comparison.png', dpi=300, bbox_inches='tight')
+    plt.plot(test_data['date'], model_results['test_pred'], '--', linewidth=2, 
+             label=model_name, color=color, alpha=0.9)
+plt.title('Test Set Performance: Actual vs Predicted Sales', fontsize=14, fontweight='bold', pad=20)
+plt.xlabel('Date', fontsize=11, labelpad=10)
+plt.ylabel('Sales ($)', fontsize=11, labelpad=10)
+plt.legend(frameon=True, facecolor='white', framealpha=0.9, loc='upper left')
+plt.grid(True, alpha=0.2)
+plt.tight_layout(pad=1.5) # Moderated padding
+plt.savefig('output/02a_test_actual_vs_pred.png', dpi=300, bbox_inches='tight')
 plt.close()
-print("✓ Model comparison visualization saved")
+
+# 02b: R² Score Comparison
+plt.figure(figsize=(10, 6))
+# Handle negative R2 for better visualization (clip at 0 for bar labels if needed, but show true value)
+r2_values = eval_df['Test R²'].values
+bars = plt.bar(eval_df['Model'], r2_values, color=LINE_COLORS, alpha=0.85, edgecolor='none', width=0.6)
+plt.axhline(0, color='#64748b', linewidth=1, alpha=0.5)
+plt.title('Accuracy Comparison (R² Score)', fontsize=14, fontweight='bold', pad=20)
+plt.ylabel('R² Score (Higher is Better)', fontsize=11)
+# Set limits to show negative values if they exist, but keep it clean
+min_r2 = min(0, min(r2_values) * 1.2)
+plt.ylim([min_r2, max(1.1, max(r2_values) * 1.2)])
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height, f'{height:.3f}', 
+             ha='center', va='bottom' if height >= 0 else 'top', 
+             fontsize=11, fontweight='bold', color='#1e293b')
+plt.grid(True, alpha=0.2, axis='y')
+plt.tight_layout()
+plt.savefig('output/02b_test_r2_comparison.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# 02c: RMSE Comparison
+plt.figure(figsize=(10, 6))
+bars = plt.bar(eval_df['Model'], eval_df['Test RMSE'], color=LINE_COLORS, alpha=0.85, edgecolor='none', width=0.6)
+plt.title('Error Comparison (RMSE)', fontsize=14, fontweight='bold', pad=20)
+plt.ylabel('RMSE ($) (Lower is Better)', fontsize=11)
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height, f'${height:,.0f}', 
+             ha='center', va='bottom', fontsize=11, fontweight='bold', color='#1e293b')
+plt.grid(True, alpha=0.2, axis='y')
+plt.tight_layout()
+plt.savefig('output/02c_test_rmse_comparison.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+# 02d: MAE Comparison
+plt.figure(figsize=(10, 6))
+bars = plt.bar(eval_df['Model'], eval_df['Test MAE'], color=LINE_COLORS, alpha=0.85, edgecolor='none', width=0.6)
+plt.title('Average Error Comparison (MAE)', fontsize=14, fontweight='bold', pad=20)
+plt.ylabel('MAE ($) (Lower is Better)', fontsize=11)
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height, f'${height:,.0f}', 
+             ha='center', va='bottom', fontsize=11, fontweight='bold', color='#1e293b')
+plt.grid(True, alpha=0.2, axis='y')
+plt.tight_layout()
+plt.savefig('output/02d_test_mae_comparison.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print("✓ Split model comparison visualizations saved")
 
 # ============================================================================
 # 8. FUTURE FORECASTING (30 DAYS AHEAD)

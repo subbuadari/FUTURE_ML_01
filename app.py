@@ -5,6 +5,7 @@ Flask Backend for Upload & Auto-Processing
 
 import os
 import sys
+import subprocess
 import json
 import shutil
 from datetime import datetime
@@ -119,147 +120,6 @@ def append_data_to_csv(new_data_path):
     except Exception as e:
         return False, str(e)
 
-def train_models(df):
-    """Train all three forecasting models"""
-    try:
-        # Prepare data
-        df['date'] = pd.to_datetime(df['date'])
-
-        # Aggregate by date if multiple records per day
-        daily_sales = df.groupby('date')['sales'].sum().reset_index()
-
-        # Feature engineering
-        df_features = daily_sales.copy()
-        df_features['day'] = df_features['date'].dt.day
-        df_features['month'] = df_features['date'].dt.month
-        df_features['quarter'] = df_features['date'].dt.quarter
-        df_features['year'] = df_features['date'].dt.year
-        df_features['day_of_week'] = df_features['date'].dt.dayofweek
-        df_features['day_of_year'] = df_features['date'].dt.dayofyear
-        df_features['is_weekend'] = df_features['day_of_week'].isin([5, 6]).astype(int)
-
-        # Lag features
-        df_features['lag_1'] = df_features['sales'].shift(1)
-        df_features['lag_7'] = df_features['sales'].shift(7)
-        df_features['lag_30'] = df_features['sales'].shift(30)
-
-        # Rolling averages
-        df_features['rolling_mean_7'] = df_features['sales'].rolling(window=7).mean()
-        df_features['rolling_mean_30'] = df_features['sales'].rolling(window=30).mean()
-
-        # Drop NaN
-        df_features = df_features.dropna().reset_index(drop=True)
-
-        # Split data
-        train_size = int(len(df_features) * 0.70)
-        val_size = int(len(df_features) * 0.15)
-
-        train_data = df_features[:train_size]
-        val_data = df_features[train_size:train_size+val_size]
-        test_data = df_features[train_size+val_size:]
-
-        feature_cols = ['day', 'month', 'quarter', 'year', 'day_of_week', 'day_of_year',
-                       'is_weekend', 'lag_1', 'lag_7', 'lag_30', 'rolling_mean_7', 'rolling_mean_30']
-
-        X_train = train_data[feature_cols]
-        y_train = train_data['sales']
-        X_test = test_data[feature_cols]
-        y_test = test_data['sales']
-
-        # Train models
-        models_dict = {}
-        results = {}
-
-        # Linear Regression
-        lr_model = LinearRegression()
-        lr_model.fit(X_train, y_train)
-        lr_pred = lr_model.predict(X_test)
-        lr_r2 = r2_score(y_test, lr_pred)
-        lr_mae = mean_absolute_error(y_test, lr_pred)
-        lr_rmse = np.sqrt(mean_squared_error(y_test, lr_pred))
-
-        models_dict['Linear Regression'] = lr_model
-        results['Linear Regression'] = {'R2': lr_r2, 'MAE': lr_mae, 'RMSE': lr_rmse}
-
-        # Random Forest
-        rf_model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
-        rf_model.fit(X_train, y_train)
-        rf_pred = rf_model.predict(X_test)
-        rf_r2 = r2_score(y_test, rf_pred)
-        rf_mae = mean_absolute_error(y_test, rf_pred)
-        rf_rmse = np.sqrt(mean_squared_error(y_test, rf_pred))
-
-        models_dict['Random Forest'] = rf_model
-        results['Random Forest'] = {'R2': rf_r2, 'MAE': rf_mae, 'RMSE': rf_rmse}
-
-        # Gradient Boosting
-        gb_model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
-        gb_model.fit(X_train, y_train)
-        gb_pred = gb_model.predict(X_test)
-        gb_r2 = r2_score(y_test, gb_pred)
-        gb_mae = mean_absolute_error(y_test, gb_pred)
-        gb_rmse = np.sqrt(mean_squared_error(y_test, gb_pred))
-
-        models_dict['Gradient Boosting'] = gb_model
-        results['Gradient Boosting'] = {'R2': gb_r2, 'MAE': gb_mae, 'RMSE': gb_rmse}
-
-        # Select best model
-        best_model_name = max(results, key=lambda x: results[x]['R2'])
-        best_model = models_dict[best_model_name]
-        best_results = results[best_model_name]
-
-        return True, {
-            'model_name': best_model_name,
-            'model': best_model,
-            'results': results,
-            'best_r2': results[best_model_name]['R2'],
-            'best_mae': results[best_model_name]['MAE'],
-            'features': df_features,
-            'feature_cols': feature_cols
-        }
-    except Exception as e:
-        return False, str(e)
-
-def generate_forecast(model, df_features, feature_cols, days_ahead=30):
-    """Generate forecast for next N days"""
-    try:
-        from datetime import timedelta
-
-        last_date = df_features['date'].max()
-        future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=days_ahead, freq='D')
-
-        forecast_features = []
-        for date in future_dates:
-            day = date.day
-            month = date.month
-            quarter = date.quarter
-            year = date.year
-            day_of_week = date.dayofweek
-            day_of_year = date.dayofyear
-            is_weekend = 1 if day_of_week >= 5 else 0
-
-            lag_1 = df_features['sales'].iloc[-1]
-            lag_7 = df_features['sales'].iloc[-7] if len(df_features) >= 7 else df_features['sales'].iloc[-1]
-            lag_30 = df_features['sales'].iloc[-30] if len(df_features) >= 30 else df_features['sales'].iloc[-1]
-
-            rolling_mean_7 = df_features['sales'].iloc[-7:].mean() if len(df_features) >= 7 else df_features['sales'].mean()
-            rolling_mean_30 = df_features['sales'].iloc[-30:].mean() if len(df_features) >= 30 else df_features['sales'].mean()
-
-            forecast_features.append([day, month, quarter, year, day_of_week, day_of_year,
-                                    is_weekend, lag_1, lag_7, lag_30, rolling_mean_7, rolling_mean_30])
-
-        X_forecast = pd.DataFrame(forecast_features, columns=feature_cols)
-        forecast_values = model.predict(X_forecast)
-
-        forecast_df = pd.DataFrame({
-            'date': future_dates,
-            'forecasted_sales': forecast_values
-        })
-
-        return True, forecast_df
-    except Exception as e:
-        return False, str(e)
-
 # ============================================================================
 # ROUTES
 # ============================================================================
@@ -267,7 +127,12 @@ def generate_forecast(model, df_features, feature_cols, days_ahead=30):
 @app.route('/')
 def dashboard():
     """Home page with interactive dashboard"""
-    return render_template('dashboard.html')
+    try:
+        mod_time = os.path.getmtime('data/sales_data.csv')
+        last_update = datetime.fromtimestamp(mod_time).strftime('%B %d, %Y')
+    except Exception:
+        last_update = datetime.now().strftime('%B %d, %Y')
+    return render_template('dashboard.html', last_update=last_update)
 
 @app.route('/output/<path:filename>')
 def serve_output(filename):
@@ -341,97 +206,85 @@ def upload_file():
         if not append_success:
             return jsonify({'error': f'Failed to append data: {str(append_result)}'}), 500
 
-        # Run full analysis script to regenerate plots and reports
+        # Run full analysis script as the single source of truth
         try:
-            import subprocess
             python_exe = sys.executable
-            # Using current python exe (venv) to run the analysis script
-            subprocess.run([python_exe, 'sales_forecasting_analysis.py'], 
-                          capture_output=True, text=True, check=True)
+            script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sales_forecasting_analysis.py')
+            # Force UTF-8 encoding for the subprocess environment to prevent Windows 'charmap' errors
+            env = os.environ.copy()
+            env['PYTHONIOENCODING'] = 'utf-8'
+            # Capture as bytes to avoid encoding issues during the run itself
+            result = subprocess.run([python_exe, script_path], 
+                          capture_output=True, check=True, env=env)
             print("✓ Full analysis script executed successfully")
+        except subprocess.CalledProcessError as e:
+            try:
+                # Decoded manually with 'replace' to ensure it's ASCII-safe for logging
+                safe_stdout = e.stdout.decode('utf-8', 'replace').encode('ascii', 'backslashreplace').decode('ascii')
+                safe_stderr = e.stderr.decode('utf-8', 'replace').encode('ascii', 'backslashreplace').decode('ascii')
+                error_msg = f"Analysis script failed (exit {e.returncode}):\nSTDOUT: {safe_stdout}\nSTDERR: {safe_stderr}"
+                print(error_msg)
+                return jsonify({'error': error_msg}), 500
+            except Exception as inner_e:
+                return jsonify({'error': f"Analysis script failed (exit {e.returncode}) and error report failed: {str(inner_e)}"}), 500
         except Exception as e:
-            print(f"⚠ Warning: Analysis script failed: {str(e)}")
-            # We continue because model retraining is also handled locally in app.py
+            try:
+                error_msg = f"Server error during analysis: {str(e)}".encode('ascii', 'backslashreplace').decode('ascii')
+                print(error_msg)
+                return jsonify({'error': error_msg}), 500
+            except:
+                return jsonify({'error': "Server error during analysis (and error message construction failed)"}), 500
 
-        # Ensure append_result is treated as dict for linter
-        app_res: dict = append_result if isinstance(append_result, dict) else {}
+        # Read results generated by the script
+        try:
+            # 1. Model Evaluation Results
+            eval_df = pd.read_csv('output/model_evaluation_results.csv')
+            # 2. Latest Forecast
+            forecast_df = pd.read_csv('output/sales_forecast_30days.csv')
+            # 3. Final Sales Data for comparison metrics
+            new_df_full = pd.read_csv(data_path)
+        except Exception as e:
+            return jsonify({'error': f'Failed to read analysis results: {str(e)}'}), 500
 
-        # Train models
-        df_to_train = pd.read_csv(data_path)
-        train_success, train_result_data = train_models(df_to_train)
-        
-        # Type-safe model training results
-        train_res = {}
-        if train_success and isinstance(train_result_data, dict):
-            train_res = train_result_data
-        else:
-            return jsonify({'error': f'Model training failed: {str(train_result_data)}'}), 500
-
-        # Generate forecast
-        forecast_success, forecast_res = generate_forecast(
-            train_res.get('model'),
-            train_res.get('features'),
-            train_res.get('feature_cols', [])
-        )
-        if not forecast_success:
-            return jsonify({'error': f'Forecast generation failed: {str(forecast_res)}'}), 500
-
-        # Ensure forecast_res is a DataFrame or something with to_csv for the linter
-        if not isinstance(forecast_res, pd.DataFrame):
-             return jsonify({'error': 'Forecast result is not a valid DataFrame'}), 500
-            
-        forecast_df: pd.DataFrame = forecast_res
-
-        # Calculate comparison
-        new_df_full = pd.read_csv(data_path)
+        # Calculate metrics for response
         new_records = len(new_df_full)
         new_avg_sales = float(new_df_full['sales'].mean())
-
-        # Save forecast
-        forecast_df.to_csv('output/sales_forecast_30days_latest.csv', index=False)
-
-        # Prepare metrics safely
+        
         records_increase = 0.0
         if old_records > 0:
-            diff_records = float(new_records - old_records)
-            records_increase = round((diff_records / float(old_records)) * 100.0, 1)
+            records_increase = round(((new_records - old_records) / old_records) * 100.0, 1)
 
         change_pct = 0.0
         if old_avg_sales > 0:
-            diff_sales = float(new_avg_sales - old_avg_sales)
-            change_pct = round((diff_sales / old_avg_sales) * 100.0, 1)
+            change_pct = round(((new_avg_sales - old_avg_sales) / old_avg_sales) * 100.0, 1)
 
-        # Build response with extreme type safety for the linter
-        results_map = {}
-        if isinstance(train_res.get('results'), dict):
-            results_map = train_res['results']
-
-        best_model_details = {}
-        best_name = str(train_res.get('model_name', 'Unknown'))
-        if best_name in results_map:
-            best_model_details = results_map[best_name]
+        # Get best model from evaluation results
+        # Best model is based on Test R2 as per the script logic
+        best_model_row = eval_df.iloc[eval_df['Test R²'].idxmax()]
+        
+        # Build all_models map
+        all_models = {}
+        for _, row in eval_df.iterrows():
+            all_models[str(row['Model'])] = {
+                'r2': round(float(row['Test R²']), 4),
+                'mae': round(float(row['Test MAE']), 2),
+                'rmse': round(float(row['Test RMSE']), 2)
+            }
 
         response = {
             'status': 'success',
             'message': 'Data processed successfully!',
             'data_append': {
-                'new_records_added': int(app_res.get('new_records', 0)),
+                'new_records_added': int(append_result.get('new_records', 0)) if isinstance(append_result, dict) else 0,
                 'total_records_now': int(new_records),
                 'records_increase_percent': float(records_increase)
             },
             'model_performance': {
-                'model_selected': best_name,
-                'r2_score': round(float(train_res.get('best_r2', 0.0)), 4),
-                'mae': round(float(train_res.get('best_mae', 0.0)), 2),
-                'rmse': round(float(best_model_details.get('RMSE', 0.0)), 2),
-                'all_models': {
-                    str(k): {
-                        'r2': round(float(v.get('R2', 0.0)), 4), 
-                        'mae': round(float(v.get('MAE', 0.0)), 2), 
-                        'rmse': round(float(v.get('RMSE', 0.0)), 2)
-                    }
-                    for k, v in results_map.items() if isinstance(v, dict)
-                }
+                'model_selected': str(best_model_row['Model']),
+                'r2_score': round(float(best_model_row['Test R²']), 4),
+                'mae': round(float(best_model_row['Test MAE']), 2),
+                'rmse': round(float(best_model_row['Test RMSE']), 2),
+                'all_models': all_models
             },
             'forecast': {
                 'average_daily_sales': round(float(forecast_df['forecasted_sales'].mean()), 2),
@@ -509,4 +362,4 @@ if __name__ == '__main__':
     print("╚════════════════════════════════════════════════════════════════╝")
     print("")
 
-    app.run(debug=True, host='localhost', port=5000)
+    app.run(debug=True, host='localhost', port=5000, use_reloader=False)

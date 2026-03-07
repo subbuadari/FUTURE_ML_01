@@ -3,31 +3,31 @@
 SALES & DEMAND FORECASTING - EXECUTIVE SUMMARY
 ================================================================================
 
-PROJECT COMPLETION DATE: 2026-03-06 22:57:20
+PROJECT COMPLETION DATE: 2026-03-07 23:01:46
 
 DATASET INFORMATION:
-  • Total historical data points: 120 days
-  • Time period: 2021-01-01 to 2024-01-24
-  • Average daily sales: $6,315.79
-  • Sales range: $4,105.20 to $9,890.45
+  • Total historical data points: 129 days
+  • Time period: 2021-01-01 to 2024-03-24
+  • Average daily sales: $6,125.79
+  • Sales range: $2,180.25 to $9,890.45
 
 MODELS EVALUATED:
-  1. Linear Regression - R²: 0.2055
-  2. Random Forest - R²: 0.0852
-  3. Gradient Boosting - R²: -0.1521
+  1. Linear Regression - R²: -2.6234
+  2. Random Forest - R²: -0.4296
+  3. Gradient Boosting - R²: -0.7186
 
 SELECTED MODEL:
-  • Model: Linear Regression
-  • R² Score: 0.2055 (20.55%)
-  • Mean Absolute Error: $1,008.44
-  • Prediction Confidence: 84.0%
+  • Model: Random Forest
+  • R² Score: -0.4296 (-42.96%)
+  • Mean Absolute Error: $2,497.32
+  • Prediction Confidence: 59.2%
 
 30-DAY FORECAST OUTLOOK:
-  • Forecasted average daily sales: $8,028.86
-  • Total 30-day revenue projection: $240,865.77
-  • Growth vs. historical average: +27.1%
-  • Peak sales day: 2024-01-29 ($8,790.91)
-  • Lowest sales day: 2024-02-18 ($7,225.05)
+  • Forecasted average daily sales: $7,102.64
+  • Total 30-day revenue projection: $213,079.25
+  • Growth vs. historical average: +15.9%
+  • Peak sales day: 2024-03-30 ($7,137.56)
+  • Lowest sales day: 2024-04-01 ($7,081.16)
 
 KEY BUSINESS DECISIONS:
   1. Use forecasted daily averages for inventory planning
@@ -43,7 +43,7 @@ OUTPUT FILES GENERATED:
   ✓ output/04_feature_importance.png - Key drivers of sales
   ✓ output/sales_forecast_30days.csv - Detailed daily forecast
   ✓ output/model_evaluation_results.csv - Model metrics
-  ✓ models/linear_regression_model.pkl - Trained model
+  ✓ models/random_forest_model.pkl - Trained model
 
 NEXT STEPS:
   1. Present visualizations to business stakeholders
