@@ -42,6 +42,25 @@ This project implements an end-to-end sales forecasting system that:
 - Feature importance analysis
 - Business-friendly executive summary
 
+## 📦 Project Assets (Dataset & Models)
+
+> [!IMPORTANT]
+> **Download Requirement:** To keep this repository lightweight and fast, large binary files (trained models) and datasets are stored externally on Google Drive. 
+> 
+> **[🔗 Download Project Assets (Google Drive)](https://drive.google.com/drive/folders/1xBmeOIZK7kehjpPJpcDX4_HXlAGvWZte?usp=sharing)**
+
+### Why are these files here?
+- **GitHub Policy:** GitHub has a 100MB file limit. Trained ML models (`.pkl`) and large datasets (`.csv`) can quickly exceed this or bloat the repository history.
+- **Repository Hygiene:** External storage ensures that the source code remains easy to audit, clone, and manage.
+- **Account Safety:** Pushing huge binary blobs to standard repositories can sometimes trigger security flags or account suspensions (as experienced during development).
+
+### What's included in the link?
+- **`data/`**: The complete historical sales dataset (`sales_data.csv`).
+- **`models/`**: All three trained competitive models (Linear Regression, Random Forest, Gradient Boosting).
+- **`output/`**: Pre-generated visualizations, 30-day forecast reports, and executive summaries.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -54,10 +73,9 @@ FUTURE_ML_01/
 ├── 🖥️  DASHBOARD.html                 # Main Automated Hub (Emerald UI)
 ├── 📊 SYSTEM_OVERVIEW.html            # Stakeholder overview page
 │
-├── 📁 data/
-│   └── sales_data.csv                 # Historical sales dataset (input)
+├── 📁 data/                           # [External] Move downloaded sales_data.csv here
 │
-├── 📁 models/                         # Trained ML models (.pkl) — auto-generated
+├── 📁 models/                         # [External] Move downloaded .pkl models here
 │
 ├── 📁 static/
 │   ├── css/                           # Dashboard stylesheets
@@ -70,10 +88,7 @@ FUTURE_ML_01/
 │
 ├── 📄 README.md                       # This file
 ├── 📄 INDEX.md                        # Navigation hub
-├── 📄 QUICK_START.md                  # 5-minute setup guide
-├── 📄 PROJECT_DELIVERABLES.md         # Full project inventory
 ├── 📄 requirements.txt                # Python dependencies
-├── 📄 LICENSE                         # MIT License
 └── 📄 .gitignore                      # Git exclusion rules
 ```
 
