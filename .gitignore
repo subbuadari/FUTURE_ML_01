@@ -1,0 +1,33 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python cache and checkpoints
+__pycache__/
+*.py[cod]
+*.pyc
+.ipynb_checkpoints/
+
+# Models and large serialized files
+models/
+*.pkl
+
+# Generated output and datasets
+output/
+data/
+uploads/
+
+# Agent and IDE settings
+.gemini/
+.vscode/
+*.code-workspace
+
+# Logs and temporary files
+*.log
+stderr.log
+stdout.log
+
+# OS files
+.DS_Store
+Thumbs.db
