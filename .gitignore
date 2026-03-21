@@ -31,3 +31,7 @@ stdout.log
 # OS files
 .DS_Store
 Thumbs.db
+
+# Large Assets
+FUTURE_ML_01_ASSETS/
+
