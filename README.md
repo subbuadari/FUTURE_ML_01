@@ -125,9 +125,19 @@ FUTURE_ML_01/
 ## ⚖️ License
 This project is licensed under the MIT License — see the LICENSE file for details.
 
-## 🏆 Internship Attribution
-> **FutureIntern Machine Learning Track — Task 1**  
+## 🏆 Internship Attribution & Above-and-Beyond Features
+
+> **FutureIntern Machine Learning Track — Task 1: Sales & Demand Forecasting**  
 > Submitted as part of the FutureIntern ML Internship Program.
+
+While the core internship task required a basic forecasting model in a notebook, this project was engineered as a **complete, enterprise-grade ML product**:
+
+| 🎯 What They Asked For | 🚀 What We Actually Built |
+|---|---|
+| Apply basic regression or time-series forecasting. | **Triple-Threat Dynamic Auto-Selecting Engine:** Automatically trains Linear Regression, Random Forest, & Gradient Boosting, and auto-selects the winner based on live R² scores! |
+| Clear visualizations of predictions. | **Beautiful Web Dashboard:** A full-stack Flask app with an Emerald UI frontend for a highly interactive, real-world store owner experience. |
+| Clean data & engineer time-based features. | **Automated Retraining Pipeline:** Users upload a new `sales_data.csv` in the browser, and the backend cleans it, engineers rolling averages, and retrains all models instantly. |
+| A short explanation of the forecast and business plans. | **Automated Executive Summaries:** Code automatically generates actionable, plain-English business reports to hand straight to management. |
 
 ## 🙋‍♂️ Author
 **Subbu Adari**  
